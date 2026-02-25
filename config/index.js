@@ -1,8 +1,23 @@
 const { Sequelize } = require('sequelize');
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.json')[env];
 
-const sequelize = new Sequelize(config.database, config.username, config.password, config);
+let sequelize;
+
+if (process.env.NODE_ENV === 'production') {
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    protocol: 'postgres',
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    },
+  });
+} else {
+  const config = require(__dirname + '/../config/config.json').development;
+  sequelize = new Sequelize(config.database, config.username, config.password, config);
+}
 
 sequelize
   .authenticate()
@@ -13,5 +28,4 @@ sequelize
     console.error('Unable to connect to the database:', err);
   });
 
-// EXPORTS VARIABEL SEQUELIZE NYA
 module.exports = { sequelize };
